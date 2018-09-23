@@ -1,7 +1,7 @@
 /*
 Bus Access system
 Access 65C02 address and databus on 24 Teensy Pins
-Simulate memory
+Start simulate some memory for 65c02 to Read/Write.
 */
 
 #include "wiring.h"
@@ -20,14 +20,15 @@ byte addressLPins[]={15,22,23,9,10,13,11,12};
 // R/W' and Clock
 int rwPin=3;
 int clockPin=4;
-
-// RESET
 int resetPin=33;
 
 // Declare global variables
 volatile byte addressL, addressL_prev, addressH, addressH_prev, data;
 volatile uint8_t rw,currentClock;
 volatile uint32_t clockCount;
+
+// memory of 64kb
+byte mem[256][256];
 
 
 void setup() {
@@ -47,7 +48,7 @@ void setup() {
 
   pinMode(rwPin, INPUT);
   pinMode(clockPin, OUTPUT);
-  pinMode(resetPin, OUTPUT_PULLUP);
+  pinMode(resetPin, OUTPUT);
 
 
   // Initialize some variables
@@ -59,11 +60,23 @@ void setup() {
     currentClock=0;
     rw=1;
     clockCount=0;
+
+    // Bring the RESET LOW to get the 6502 in a reset state
+    digitalWrite(resetPin,LOW);
+
+    // Initialize memory to 0xEA (NOP)
+    memset(mem,0xEA,sizeof(mem));
+
 }
 
 
 void loop(){
 
+// If we have waited long enough for 6502 to init, stop reseting.
+
+  if(clockCount == 8) {
+    digitalWrite(resetPin, HIGH);
+  }
   // Bring Clock LOW
   GPIOA_PDOR &=0x0000;
   //digitalWrite(clockPin,LOW);
@@ -73,14 +86,17 @@ void loop(){
     // Configure pins for Input.
     GPIOD_PDDR=0x00;
 
-    // Read data from Address Bus
-    data=GPIOD_PDIR & 0xFF;
+    // Read data from Address Bus into memory
+    // Address has been given in the last cycle and stored in addressH_prev and addressL_prev
+
+    mem[addressH_prev][addressL_prev]=GPIOD_PDIR & 0xFF;
   } else {
     //Configure pins for Output
     GPIOD_PDDR=0xFF;
 
-    // Write 0xEA to Address Bus
-    GPIOD_PDOR= 0xEA;
+    // Write data from memory to Address Bus
+    // Address has been given in the last cycle and stored in addressH_prev and addressL_prev
+    GPIOD_PDOR= mem[addressH_prev][addressL_prev];
   }
 
 
@@ -124,19 +140,17 @@ void loop(){
     Serial.print("\n");
   }
 
-  if (addressH == 0xEA && addressH_prev == 0xE9 && clockCount > 1) {
+  if (addressH == 0xEA && addressH_prev == 0xFF && clockCount > 1) {
     Serial.print("Rollover \n");
     clockCount=0;
   }
-  if (addressH == 0xEA && addressH_prev != 0xE9 && clockCount > 1) {
+  if (addressL == 0xEA && addressL_prev != 0xE9 && clockCount > 1) {
     Serial.print("Reset detected !!!! \n");
+    clockCount=0;
   }
   addressL_prev=addressL;
   addressH_prev=addressH;
   clockCount++;
-  Serial.print("Clock cycle: ");
-  Serial.print(clockCount);
-  Serial.print("\n");
   rw=0x1;
 
 }

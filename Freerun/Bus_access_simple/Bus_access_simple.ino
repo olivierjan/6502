@@ -1,7 +1,8 @@
 /*
 Bus Access system
 Access 65C02 address and databus on 24 Teensy Pins
-
+Do a Freerun of the 65C02: Feed it with 0xEA on the databus and let it cycle
+trough its whole addresss range.
 */
 
 #include "wiring.h"
@@ -130,19 +131,17 @@ void loop(){
     Serial.print("\n");
   }
 
-  if (addressH == 0xEA && addressH_prev == 0xE9 && clockCount > 1) {
+  if (addressH == 0xEA && addressH_prev == 0xFF && clockCount > 1) {
     Serial.print("Rollover \n");
     clockCount=0;
   }
-  if (addressH == 0xEA && addressH_prev != 0xE9 && clockCount > 1) {
+  if (addressL == 0xEA && addressL_prev != 0xE9 && clockCount > 1) {
     Serial.print("Reset detected !!!! \n");
+    clockCount=0;
   }
   addressL_prev=addressL;
   addressH_prev=addressH;
   clockCount++;
-  Serial.print("Clock cycle: ");
-  Serial.print(clockCount);
-  Serial.print("\n");
   rw=0x1;
 
 }
