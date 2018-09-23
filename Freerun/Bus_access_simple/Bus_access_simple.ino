@@ -20,6 +20,7 @@ byte addressLPins[]={15,22,23,9,10,13,11,12};
 // R/W' and Clock
 int rwPin=3;
 int clockPin=4;
+int resetPin=33;
 
 // Declare global variables
 volatile byte addressL, addressL_prev, addressH, addressH_prev, data;
@@ -44,6 +45,7 @@ void setup() {
 
   pinMode(rwPin, INPUT);
   pinMode(clockPin, OUTPUT);
+  pinMode(resetPin, OUTPUT);
 
 
   // Initialize some variables
@@ -55,11 +57,19 @@ void setup() {
     currentClock=0;
     rw=1;
     clockCount=0;
+
+    // Bring the RESET LOW to get the 6502 in a reset state
+    digitalWrite(resetPin,LOW);
 }
 
 
 void loop(){
 
+// If we have waited long enough for 6502 to init, stop reseting.
+
+  if(clockCount == 8) {
+    digitalWrite(resetPin, HIGH);
+  }
   // Bring Clock LOW
   GPIOA_PDOR &=0x0000;
   //digitalWrite(clockPin,LOW);
