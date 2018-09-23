@@ -1,7 +1,7 @@
 /*
 Bus Access system
 Access 65C02 address and databus on 24 Teensy Pins
-
+ 
 */
 
 #include "wiring.h"
