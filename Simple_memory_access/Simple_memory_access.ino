@@ -69,7 +69,8 @@ void setup() {
 
     // Initialize memory to 0xEA (NOP)
     memset(mem,0x00,sizeof(mem));
-    
+    memset(rom,0xEA,sizeof(rom));
+
 
 }
 
@@ -81,6 +82,57 @@ void loop(){
   if(clockCount == 8) {
     digitalWrite(resetPin, HIGH);
   }
+
+  // Bring Clock HIGH
+  GPIOA_PDOR |=1<<13;
+
+
+  // Read the Address Bus LSB
+  addressL = GPIOC_PDIR;
+
+  // Read the Address Bus MSB
+  // Get the first Nibble
+  addressH = GPIOB_PDIR;
+
+  // Get the second Nibble
+  // Shift the register right by 12 bits to get bits 16,17,18 and 19 in position
+  // 4,5,6 and 7.
+  // Mask bits 0,1,2,3 and add to addressH.
+  addressH |= (GPIOB_PDIR >> 12) & 0xF0;
+
+  // Does the 65C02 wants to Read or Write the data there ?
+  // rw=(GPIOA_PDIR>>11)&0x1;
+   rw=(GPIOA_PDIR>>12)&0x1;
+
+   // if (rw){
+   //   Serial.print("65c02 wants to READ\n");
+   // } else {
+   //   Serial.print("65c02 wants to WRITE\n");
+   //}
+
+  // if (addressL != addressL_prev || addressH != addressH_prev){
+  //   fullAddress=((uint16_t)addressH << 8 ) | addressL;
+  //   Serial.print("Address MSB, LSB: ");
+  //   Serial.print(addressH,HEX);
+  //   Serial.print(addressL,HEX);
+  //   Serial.print("-");
+  //   Serial.print(fullAddress,HEX);
+  //   Serial.print("\n");
+  //   Serial.print("Clock Counter: ");
+  //   Serial.print(clockCount);
+  //   Serial.print("\n");
+  // }
+
+  // if (addressH == 0xEA && addressH_prev == 0xFF && clockCount > 1) {
+  //   Serial.print("Rollover \n");
+  //   clockCount=0;
+  // }
+  // if (addressL == 0xEA && addressL_prev != 0xE9 && clockCount > 1) {
+  //   Serial.print("Reset detected !!!! \n");
+  //   clockCount=0;
+  // }
+  delay(500);
+
   // Bring Clock LOW
   GPIOA_PDOR &=0x0000;
   //digitalWrite(clockPin,LOW);
@@ -100,11 +152,13 @@ void loop(){
       address-=ROMADDRESS;
       // Write data from ROM to Address Bus
 
-      GPIOD_PDOR= rom[address];
-      Serial.print(" Reading Rom address: ");
+      GPIOD_PDOR= rom[address]&0xFF;
+      Serial.print(" Reading ROM address: ");
       Serial.print(address,HEX);
       Serial.print(" data: ");
       Serial.print(rom[address],HEX);
+      Serial.print("actually sent: ");
+      Serial.print(GPIOD_PDIR, HEX);
       Serial.print("\n");
     }
   } else if (address >= SERIALADDRESS){
@@ -149,7 +203,7 @@ void loop(){
       Serial.print(" data: ");
       Serial.print(mem[address],HEX);
       Serial.print("\n");
-      GPIOD_PDOR= mem[address];
+      GPIOD_PDOR= mem[address]&0xFF;
     }
   }
 
@@ -159,56 +213,10 @@ void loop(){
   // Wait a bit
   delay(500);
 
-  // Bring Clock HIGH
-  GPIOA_PDOR |=1<<13;
-
-
-  // Read the Address Bus LSB
-  addressL = GPIOC_PDIR;
-
-  // Read the Address Bus MSB
-  // Get the first Nibble
-  addressH = GPIOB_PDIR;
-
-  // Get the second Nibble
-  // Shift the register right by 12 bits to get bits 16,17,18 and 19 in position
-  // 4,5,6 and 7.
-  // Mask bits 0,1,2,3 and add to addressH.
-  addressH |= (GPIOB_PDIR >> 12) & 0xF0;
-
-  // Does the 65C02 wants to Read or Write the data there ?
-  // rw=(GPIOA_PDIR>>11)&0x1;
-   rw=(GPIOA_PDIR>>12)&0x1;
-   // if (rw){
-   //   Serial.print("65c02 wants to READ\n");
-   // } else {
-   //   Serial.print("65c02 wants to WRITE\n");
-   //}
-
-  // if (addressL != addressL_prev || addressH != addressH_prev){
-  //   fullAddress=((uint16_t)addressH << 8 ) | addressL;
-  //   Serial.print("Address MSB, LSB: ");
-  //   Serial.print(addressH,HEX);
-  //   Serial.print(addressL,HEX);
-  //   Serial.print("-");
-  //   Serial.print(fullAddress,HEX);
-  //   Serial.print("\n");
-  //   Serial.print("Clock Counter: ");
-  //   Serial.print(clockCount);
-  //   Serial.print("\n");
-  // }
-
-  // if (addressH == 0xEA && addressH_prev == 0xFF && clockCount > 1) {
-  //   Serial.print("Rollover \n");
-  //   clockCount=0;
-  // }
-  // if (addressL == 0xEA && addressL_prev != 0xE9 && clockCount > 1) {
-  //   Serial.print("Reset detected !!!! \n");
-  //   clockCount=0;
-  // }
   addressL_prev=addressL;
   addressH_prev=addressH;
   clockCount++;
-  rw=0x1;
+
+  //rw=0x1;
 
 }
