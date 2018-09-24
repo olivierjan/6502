@@ -5,6 +5,7 @@ Start simulate some memory for 65c02 to Read/Write.
 */
 
 #include "wiring.h"
+#include "msbasicrom.h"
 
 // Declare the Pins to use
 
@@ -26,9 +27,11 @@ int resetPin=33;
 volatile byte addressL, addressL_prev, addressH, addressH_prev, data;
 volatile uint8_t rw,currentClock;
 volatile uint32_t clockCount;
+volatile uint16_t fullAddress;
+volatile uint16_t address;
 
 // memory of 64kb
-byte mem[256][256];
+byte mem[0x9FF];
 
 
 void setup() {
@@ -65,7 +68,8 @@ void setup() {
     digitalWrite(resetPin,LOW);
 
     // Initialize memory to 0xEA (NOP)
-    memset(mem,0xEA,sizeof(mem));
+    memset(mem,0x00,sizeof(mem));
+    
 
 }
 
@@ -81,23 +85,75 @@ void loop(){
   GPIOA_PDOR &=0x0000;
   //digitalWrite(clockPin,LOW);
 
+  address = ((uint16_t)addressH << 8)| addressL;
+  Serial.print(address,HEX);
+  if ( address >= ROMADDRESS){
+    if (!rw) {
+      // Trying to write to ROM - not good !!!
+      Serial.print("!!! TRYING TO WRITE TO ROM !!!!\n");
+    } else {
+      //Configure pins for Output
+      GPIOD_PDDR=0xFF;
 
-  if (!rw) {
-    // Configure pins for Input.
-    GPIOD_PDDR=0x00;
+      //Change address to map to ROM
 
-    // Read data from Address Bus into memory
-    // Address has been given in the last cycle and stored in addressH_prev and addressL_prev
+      address-=ROMADDRESS;
+      // Write data from ROM to Address Bus
 
-    mem[addressH_prev][addressL_prev]=GPIOD_PDIR & 0xFF;
+      GPIOD_PDOR= rom[address];
+      Serial.print(" Reading Rom address: ");
+      Serial.print(address,HEX);
+      Serial.print(" data: ");
+      Serial.print(rom[address],HEX);
+      Serial.print("\n");
+    }
+  } else if (address >= SERIALADDRESS){
+    if (!rw) {
+      // Configure pins for Input.
+      GPIOD_PDDR=0x00;
+
+      // Read data from Address Bus and display directly if sent on data line(SERIALADDRESS + 1).
+      if (address== SERIALADDRESS + 1) {Serial.print(GPIOD_PDIR & 0xFF);};
+    } else {
+      //Configure pins for Output
+      GPIOD_PDDR=0xFF;
+      Serial.print(" Reading Serial status\n");
+      // If checking status of Serial interface, return 0x2 for the time being.
+      if (address == SERIALADDRESS) { GPIOD_PDOR=0x2;}
+
+    }
+
   } else {
-    //Configure pins for Output
-    GPIOD_PDDR=0xFF;
+    if (!rw) {
+      // Configure pins for Input.
+      GPIOD_PDDR=0x00;
 
-    // Write data from memory to Address Bus
-    // Address has been given in the last cycle and stored in addressH_prev and addressL_prev
-    GPIOD_PDOR= mem[addressH_prev][addressL_prev];
+      // Read data from Address Bus into memory
+      // Address has been given in the last cycle and stored in addressH_prev
+      // and addressL_prev
+      Serial.print(" Writing RAM address: ");
+      Serial.print(address,HEX);
+      Serial.print(" data: ");
+      Serial.print(mem[address],HEX);
+      Serial.print("\n");
+      mem[address]=GPIOD_PDIR & 0xFF;
+    } else {
+      //Configure pins for Output
+      GPIOD_PDDR=0xFF;
+
+      // Write data from memory to Address Bus
+      // Address has been given in the last cycle and stored in addressH_prev
+      // and addressL_prev
+      Serial.print(" Reading RAM address: ");
+      Serial.print(address,HEX);
+      Serial.print(" data: ");
+      Serial.print(mem[address],HEX);
+      Serial.print("\n");
+      GPIOD_PDOR= mem[address];
+    }
   }
+
+
 
 
   // Wait a bit
@@ -123,31 +179,33 @@ void loop(){
   // Does the 65C02 wants to Read or Write the data there ?
   // rw=(GPIOA_PDIR>>11)&0x1;
    rw=(GPIOA_PDIR>>12)&0x1;
-   if (rw){
-     Serial.print("65c02 wants to READ\n");
-   } else {
-     Serial.print("65c02 wants to WRITE\n");
-   }
+   // if (rw){
+   //   Serial.print("65c02 wants to READ\n");
+   // } else {
+   //   Serial.print("65c02 wants to WRITE\n");
+   //}
 
-  if (addressL != addressL_prev || addressH != addressH_prev){
-    Serial.print("Address MSB, LSB: ");
-    Serial.print(addressH,HEX);
-    Serial.print(" ");
-    Serial.print(addressL,HEX);
-    Serial.print("\n");
-    Serial.print("Clock Counter: ");
-    Serial.print(clockCount);
-    Serial.print("\n");
-  }
+  // if (addressL != addressL_prev || addressH != addressH_prev){
+  //   fullAddress=((uint16_t)addressH << 8 ) | addressL;
+  //   Serial.print("Address MSB, LSB: ");
+  //   Serial.print(addressH,HEX);
+  //   Serial.print(addressL,HEX);
+  //   Serial.print("-");
+  //   Serial.print(fullAddress,HEX);
+  //   Serial.print("\n");
+  //   Serial.print("Clock Counter: ");
+  //   Serial.print(clockCount);
+  //   Serial.print("\n");
+  // }
 
-  if (addressH == 0xEA && addressH_prev == 0xFF && clockCount > 1) {
-    Serial.print("Rollover \n");
-    clockCount=0;
-  }
-  if (addressL == 0xEA && addressL_prev != 0xE9 && clockCount > 1) {
-    Serial.print("Reset detected !!!! \n");
-    clockCount=0;
-  }
+  // if (addressH == 0xEA && addressH_prev == 0xFF && clockCount > 1) {
+  //   Serial.print("Rollover \n");
+  //   clockCount=0;
+  // }
+  // if (addressL == 0xEA && addressL_prev != 0xE9 && clockCount > 1) {
+  //   Serial.print("Reset detected !!!! \n");
+  //   clockCount=0;
+  // }
   addressL_prev=addressL;
   addressH_prev=addressH;
   clockCount++;
