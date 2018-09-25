@@ -7,7 +7,7 @@ Start simulate some memory for 65c02 to Read/Write.
 #include "wiring.h"
 #include "msbasicrom.h"
 
-#define waitCycle 10000
+#define waitCycle 1
 
 // Declare the Pins to use
 
@@ -31,6 +31,7 @@ volatile uint8_t rw,currentClock;
 volatile uint32_t clockCount;
 volatile uint16_t fullAddress;
 volatile uint16_t address;
+volatile byte ACIAStatus;
 
 // memory of 64kb
 byte mem[0x9FF];
@@ -116,6 +117,8 @@ void loop(){
 
     //Serial.print(" R ");
 
+    ACIAStatus =(Serial.available()>0) ? 3 : 2;
+
     //Configure pins for Output
     GPIOD_PDDR=0xFF;
 
@@ -130,10 +133,10 @@ void loop(){
         //Serial.print("\n");
       } else if (address >= SERIALADDRESS){
           if (address == SERIALADDRESS) {
-            GPIOD_PDOR=0x2;
+            GPIOD_PDOR=ACIAStatus;
             //Serial.print("02\n");
           } else {
-            Serial.print("Reading from bad Serial address!!!\n");
+            GPIOD_PDOR=Serial.read();
           }
       } else {
         GPIOD_PDOR= mem[address];
