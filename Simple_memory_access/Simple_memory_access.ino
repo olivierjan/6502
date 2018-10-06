@@ -7,7 +7,7 @@ Start simulate some memory for 65c02 to Read/Write.
 #include "wiring.h"
 #include "msbasicrom.h"
 
-#define waitCycle 1
+#define waitCycle 2
 
 // Declare the Pins to use
 
@@ -27,7 +27,7 @@ int resetPin=33;
 
 // Declare global variables
 volatile byte addressL, addressL_prev, addressH, addressH_prev, data;
-volatile uint8_t rw,currentClock;
+volatile uint8_t rw,currentClock,i;
 volatile uint32_t clockCount;
 volatile uint16_t fullAddress;
 volatile uint16_t address;
@@ -83,6 +83,8 @@ void loop(){
   GPIOA_PDOR &=0x0000;
 
   delayMicroseconds (waitCycle);
+  // Bring Clock HIGH to start Phase 2
+  GPIOA_PDOR |=1<<13;
 
   // Read the Address Bus LSB
   addressL = GPIOC_PDIR;
@@ -100,12 +102,10 @@ void loop(){
   // Does the 65C02 wants to Read or Write the data there ?
   rw=(GPIOA_PDIR>>12)&0x1;
 
-  delayMicroseconds(waitCycle);
+  //delayMicroseconds(waitCycle);
 
-  // Bring Clock HIGH to start Phase 2
-  GPIOA_PDOR |=1<<13;
 
-  delayMicroseconds(waitCycle);
+  //delayMicroseconds(waitCycle);
 
   // Aggregate LSB and MSB to get the full 16bit address.
   address = ((uint16_t)addressH << 8)| addressL;
@@ -171,9 +171,10 @@ void loop(){
 
 
   // Wait a bit
-  delayMicroseconds(waitCycle);
+//  delayMicroseconds(waitCycle);
 
   // Next cycle
+  for (i=0; i< 8; i++){}
   clockCount++;
 
 
