@@ -4,7 +4,7 @@ Access 65C02 address and databus on 24 Teensy Pins
 Start simulate some memory for 65c02 to Read/Write.
 */
 
-#include "wiring.h"
+//#include "wiring.h"
 #include "msbasicrom.h"
 
 #define waitCycle 2
@@ -102,11 +102,6 @@ void loop(){
   // Does the 65C02 wants to Read or Write the data there ?
   rw=(GPIOA_PDIR>>12)&0x1;
 
-  //delayMicroseconds(waitCycle);
-
-
-  //delayMicroseconds(waitCycle);
-
   // Aggregate LSB and MSB to get the full 16bit address.
   address = ((uint16_t)addressH << 8)| addressL;
 
@@ -174,8 +169,8 @@ void loop(){
 //  delayMicroseconds(waitCycle);
 
   // Next cycle
+  // Wait a little bit in order to make clock cycles even
   for (i=0; i< 8; i++){}
   clockCount++;
-
 
 }
