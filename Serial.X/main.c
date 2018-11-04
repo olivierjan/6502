@@ -65,6 +65,7 @@ void main(void)
     {
         // Add your application code
         printf("Hello World!\r\n");
+        printf("working...\n");
     }
 }
 /**
