@@ -24,18 +24,16 @@ byte addressLPins[]={15,22,23,9,10,13,11,12};
 int rwPin=3;
 int clockPin=4;
 int resetPin=33;
+int serialEnablePin=34;
 
 // Declare global variables
 volatile byte addressL, addressL_prev, addressH, addressH_prev, data;
-volatile uint8_t rw,currentClock,i;
-volatile uint32_t clockCount;
-volatile uint16_t fullAddress;
+volatile uint8_t rw,i;
+volatile uint16_t SerialAddress;
 volatile uint16_t address;
-volatile byte ACIAStatus;
 
 // memory of 64kb
 byte mem[0x9FF];
-
 
 void setup() {
 
@@ -52,16 +50,14 @@ void setup() {
   pinMode(rwPin, INPUT);
   pinMode(clockPin, OUTPUT);
   pinMode(resetPin, OUTPUT);
-
+  pinMode(serialEnablePin, OUTPUT);
 
   // Initialize some variables
   addressL=0x0;
   addressL_prev=0x0;
   addressH=0x0;
   addressH_prev=0x0;
-  currentClock=0;
   rw=1;
-  clockCount=0;
 
   // Bring the RESET LOW to get the 6502 in a reset state
   digitalWrite(resetPin,LOW);
@@ -75,7 +71,6 @@ void setup() {
   digitalWrite(resetPin,HIGH);
 
 }
-
 
 void loop(){
 
@@ -105,12 +100,13 @@ void loop(){
   // Aggregate LSB and MSB to get the full 16bit address.
   address = ((uint16_t)addressH << 8)| addressL;
 
-  // If 65C02 wants to Read
-  if (rw){
-
-    // If we have data waiting on the serial port, change the ACIA Status
-    ACIAStatus =(Serial.available()>0) ? 3 : 2;
-
+  // If it's serial access, enable Serial
+  SerialAddress=(~address & 0xE000)^0xA000;
+  if (SerialAddress){
+    // Enable access to Serial
+    GPIOE_PDOR |=1<<24;
+  } else if (rw){
+    // If 65C02 wants to Read
     //Configure pins for Output
     GPIOD_PDDR=0xFF;
 
@@ -124,18 +120,8 @@ void loop(){
         GPIOD_PDOR= rom[address];
 
         // If address correspond to serial port memory address range ($A000-$A001)
-          } else if (address >= SERIALADDRESS){
-          if (address == SERIALADDRESS) {
-            // Send ACIA Status
-            GPIOD_PDOR=ACIAStatus;
-          } else {
-
-            // Send the character from serial
-            GPIOD_PDOR=Serial.read();
-          }
-
-          // Not ROM or Serial, we're looking for data in RAM
-      } else {
+      } else if (address < SERIALADDRESS){
+        // Not ROM or Serial, we're looking for data in RAM
         // Output the byte located at address
         GPIOD_PDOR= mem[address];
       }
@@ -151,26 +137,13 @@ void loop(){
       Serial.print("!!! TRYING TO WRITE TO ROM !!!!\n");
 
       // Writing to Serial address range
-    } else if (address >= SERIALADDRESS){
-
-          // Read data from Address Bus and display directly if sent on data line(SERIALADDRESS + 1).
-          if (address== SERIALADDRESS + 1) {
-            Serial.write((char)GPIOD_PDIR&0xFF);
-          }
-
-        // Writing to RAM
-    } else {
+    } else if (address < SERIALADDRESS){
+      // Writing to RAM
       mem[address]=GPIOD_PDIR;
     }
   }
-
-
-  // Wait a bit
-//  delayMicroseconds(waitCycle);
-
   // Next cycle
   // Wait a little bit in order to make clock cycles even
   for (i=0; i< 8; i++){}
-  clockCount++;
 
 }
