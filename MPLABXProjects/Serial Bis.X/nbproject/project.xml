@@ -3,8 +3,8 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Serial</name>
-            <creation-uuid>99581a31-9b0f-4ade-b2f7-ef40a122b410</creation-uuid>
+            <name>Serial Blink</name>
+            <creation-uuid>f8031e75-fe8e-4388-9ce9-2928d15b91f9</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>
             <cpp-extensions/>
