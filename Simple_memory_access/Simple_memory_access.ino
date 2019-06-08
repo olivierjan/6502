@@ -110,6 +110,8 @@ void loop(){
 
     // If we have data waiting on the serial port, change the ACIA Status
     ACIAStatus =(Serial.available()>0) ? 3 : 2;
+    Serial.print(address,HEX);
+    Serial.print("\n");
 
     //Configure pins for Output
     GPIOD_PDDR=0xFF;
