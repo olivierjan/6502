@@ -7,7 +7,7 @@ Start simulate some memory for 65c02 to Read/Write.
 //#include "wiring.h"
 #include "msbasicrom.h"
 
-#define waitCycle 2
+#define waitCycle 1
 
 // Declare the Pins to use
 
@@ -38,6 +38,7 @@ byte mem[0x9FF];
 
 
 void setup() {
+  GPIOD_PDDR=0x00;
 
   // Start the serial port
 
@@ -74,6 +75,7 @@ void setup() {
   // Release RESET and start working
   digitalWrite(resetPin,HIGH);
 
+
 }
 
 
@@ -82,7 +84,9 @@ void loop(){
   // Bring Clock LOW to start Phase 1
   GPIOA_PDOR &=0x0000;
 
-  delayMicroseconds (waitCycle);
+  //delayMicroseconds (waitCycle);
+  for (i=0; i< 8; i++){}
+
   // Bring Clock HIGH to start Phase 2
   GPIOA_PDOR |=1<<13;
 
@@ -110,8 +114,6 @@ void loop(){
 
     // If we have data waiting on the serial port, change the ACIA Status
     ACIAStatus =(Serial.available()>0) ? 3 : 2;
-    Serial.print(address,HEX);
-    Serial.print("\n");
 
     //Configure pins for Output
     GPIOD_PDDR=0xFF;
@@ -141,6 +143,9 @@ void loop(){
         // Output the byte located at address
         GPIOD_PDOR= mem[address];
       }
+      // Switch back GPIO to Input
+      GPIOD_PDDR=0x00;
+
     // if 65C02 wants to write
   } else {
 
@@ -165,14 +170,4 @@ void loop(){
       mem[address]=GPIOD_PDIR;
     }
   }
-
-
-  // Wait a bit
-//  delayMicroseconds(waitCycle);
-
-  // Next cycle
-  // Wait a little bit in order to make clock cycles even
-  for (i=0; i< 8; i++){}
-  clockCount++;
-
 }
