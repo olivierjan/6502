@@ -36,6 +36,7 @@ volatile byte ACIAStatus;
 // memory of 64kb
 byte mem[0x9FF];
 
+void yield(){}
 
 void setup() {
   GPIOD_PDDR=0x00;
@@ -74,7 +75,7 @@ void setup() {
 
   // Release RESET and start working
   digitalWrite(resetPin,HIGH);
-
+  
 
 }
 
