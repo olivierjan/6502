@@ -75,7 +75,7 @@ void setup() {
 
   // Release RESET and start working
   digitalWrite(resetPin,HIGH);
-  
+
 
 }
 
@@ -86,7 +86,7 @@ void loop(){
   GPIOA_PDOR &=0x0000;
 
   //delayMicroseconds (waitCycle);
-  for (i=0; i< 8; i++){}
+  for (i=0; i< 2; i++){}
 
   // Bring Clock HIGH to start Phase 2
   GPIOA_PDOR |=1<<13;
