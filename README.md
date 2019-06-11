@@ -9,5 +9,7 @@ Starting with a Teensy 3.6 to emulate the rest of the hardware, the target is to
 
 3. *MS Basic (OSI)* Contains the MS Basic assembly code from Grant Searle (http://searle.hostei.com/grant/6502/Simple6502.html).
 
+4. *Serial_Interface.X* Work in progress to get a PIC working as a simple ACIA for the 6502.
+
 
 Olivier
