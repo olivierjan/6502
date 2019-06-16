@@ -4,7 +4,6 @@ Access 65C02 address and databus on 24 Teensy Pins
 Start simulate some memory for 65c02 to Read/Write.
 */
 
-#include "msbasicrom.h"
 #include "SBC.h"
 
 // Declare the Pins to use
@@ -54,6 +53,7 @@ void setup() {
   delay(2000);                    // Keep RESET for 2 second
                                   // in order for Serial to be ready
   digitalWrite(RESETPIN,HIGH);    // Release RESET and start working
+  Serial.print("Starting SBC....\n");
 }
 
 
@@ -89,12 +89,6 @@ void loop(){
         }
         // We simply ignore the case where we receive config byte for ACIA.
       }
-      break;
-
-    case ROMENABLEC000:         // ROM is selected
-    case ROMENABLEE000:         //
-      address-=ROMADDRESS;      //Change address to map to ROM address range
-      GPIOD_PDOR= rom[address]; // Write data from ROM to Address Bus
       break;
 
     default:
