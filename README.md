@@ -10,6 +10,6 @@ Starting with a Teensy 3.6 to emulate the rest of the hardware, the target is to
 
 4. *Serial_Interface.X*: Work in progress to get a PIC working as a simple ACIA for the 6502.
 
-5. *SBC* : Start adding real ICs instead of Teensy. Now work with RAM chip.
+5. *SBC* : Start adding real ICs instead of Teensy. Now work with RAM and ROM chips.
 
 Olivier

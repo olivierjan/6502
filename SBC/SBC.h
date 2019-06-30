@@ -5,7 +5,7 @@ Start simulate some memory for 65c02 to Read/Write.
 */
 
 
-#define WAITCYCLE 1           // How long do we wante Phase 1 to be.
+#define WAITCYCLE 5           // How long do we wante Phase 1 to be.
 
 
 // PIN definitions
