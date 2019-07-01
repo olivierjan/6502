@@ -2,8 +2,8 @@
 *--
 *--   Initialization Routines
 *--   Immediately called at startup, will:
-*--						1. Initialize stack
-*--						2. Display Startup Message
+*--			1. Initialize stack
+*--			2. Display Startup Message
 *--                     3. Jump to Cold or Warm Start based on user input
 *-------------------------------------------------------------------------------
 
