@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=Serial Bis.X
+PROJECTNAME=Serial_Interface.X
 
 # Active Configuration
 DEFAULTCONF=default

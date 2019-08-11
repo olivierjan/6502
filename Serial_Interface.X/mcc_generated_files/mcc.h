@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "interrupt_manager.h"
+#include "clc1.h"
 #include "uart1.h"
 
 

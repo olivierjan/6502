@@ -58,7 +58,11 @@ void  INTERRUPT_Initialize (void)
 void __interrupt() INTERRUPT_InterruptManager (void)
 {
     // interrupt handler
-    if(PIE3bits.U1TXIE == 1 && PIR3bits.U1TXIF == 1)
+    if(PIE4bits.CLC1IE == 1 && PIR4bits.CLC1IF == 1)
+    {
+        CLC1_ISR();
+    }
+    else if(PIE3bits.U1TXIE == 1 && PIR3bits.U1TXIF == 1)
     {
         UART1_TxInterruptHandler();
     }
@@ -66,9 +70,9 @@ void __interrupt() INTERRUPT_InterruptManager (void)
     {
         UART1_RxInterruptHandler();
     }
-    else
+    else if(PIE0bits.IOCIE == 1 && PIR0bits.IOCIF == 1)
     {
-        //Unhandled Interrupt
+        PIN_MANAGER_IOC();
     }
 }
 /**

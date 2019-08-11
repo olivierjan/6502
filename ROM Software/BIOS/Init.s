@@ -9,7 +9,7 @@
 
 
 						DSK		Init.bin
-						ORG 		$F000
+						ORG 		$FD00
 						TYP 		$06
 
 *-------------------------------------------------------------------------------
@@ -22,9 +22,9 @@ BIOSCFGACIA				EXT
 BIOSCHISCTRLC				EXT
 
 
-MONITOR					EQU			$C000				; Let s see later the Monitor
-BASIC 					EQU			$C000           		; And Basic Entry points
-STACKTOP 				EQU 			#$F8				; Like a good old Apple //
+MONITOR					EQU			$D900				; Let s see later the Monitor
+BASIC 					EQU			$B000           		; And Basic Entry points
+STACKTOP 				EQU 			#$FF				; Stack goes up to 0x01FF
 
 *-------------------------------------------------------------------------------
 *-- Entry point : Reset Vector
@@ -35,6 +35,26 @@ RESET						ENT						; Declare Global
 						TXS						; Set the stack pointer
 
 						JSR		BIOSCFGACIA			; Configure ACIA
+
+
+INITVECTORS										; Store Vectors to I/O functions in RAM
+						LDA #<BIOSCHISCTRLC		; Get first byte
+						STA $0203				;
+						LDA #>BIOSCHISCTRLC		; Get second byte
+						STA $0204
+						LDA #<BIOSCHGET
+						STA $0205
+						LDA #>BIOSCHGET
+						STA $0206
+						LDA #<BIOSCHOUT
+						STA $0207
+						LDA #>BIOSCHOUT
+						STA $0208
+						LDA $00
+						STA $0209
+						STA $020A
+						STA $020B
+						STA $020C
 
 						LDY		#0				; Initialize counter
 ]LOOP						LDA 		STARTUPMESSAGE0,Y		; Get character at counter

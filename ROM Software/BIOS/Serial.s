@@ -6,7 +6,7 @@
 *-------------------------------------------------------------------------------
 
                 DSK	  Serial.bin
-                ORG   $FF00
+                ORG   $FE00
                 TYP   $06
 
 TDREBIT         EQU   #%00000010     ; Transmit Data Register Empty bit

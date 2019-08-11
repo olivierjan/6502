@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
-  <executable name="dist/default/debug\Serial_Bis.X.debug.hex">
+  <executable name="dist/default/debug/Serial_Interface.X.debug.hex">
     <memory name="program">
       <units>bytes</units>
       <length>65536</length>
-      <used>1652</used>
-      <free>63884</free>
+      <used>1974</used>
+      <free>63562</free>
     </memory>
     <memory name="data">
       <units>bytes</units>
       <length>4096</length>
-      <used>101</used>
-      <free>3995</free>
+      <used>131</used>
+      <free>3965</free>
     </memory>
   </executable>
 </project>

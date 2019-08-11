@@ -102,12 +102,13 @@
 ; Define if you want the mini-assembler, comment out if not.
 
                                                 DSK		Monitor.bin
-						ORG 		$C000
+						ORG 		$D900
 						TYP 		$06
 
-        DUM $1000
+        DUM $0280
 
 T2                              DS 1                ; Temp variable 2
+T3                              DS 1                ; Temp variable 3
 RETOK                           DS 1                ; Sets whether <Return> key is accepted in some input routines
 BIN                             DS 1                ; Holds binary value low byte
 BINH                            DS 1                ; Holds binary value high byte
@@ -201,15 +202,16 @@ IN                    EQU $0200               ; Buffer from $0200 through $027F
 
 ; External Routines
 
-BASIC                  EQU $E000               ; BASIC (cold start)
+BASIC                  EQU $B000               ; BASIC (cold start)
 ; BASIC                 EQU $03D0               ; BASIC (cold start with DOS hooks)
 MONITOR               EQU $C000               ; Apple monitor entry point
 ECHO                  EQU 1                   ; Need to echo commands
 BRKVECTOR             EQU $03F0             ; Break/interrupt vector (2 bytes)
 ; BEEP                  EQU $FBE4               ; Beep the speaker
 
-BIOSCHGET             EQU $FF17
-BIOSCHOUT             EQU $FF08
+BIOSCHGET              EQU $0205
+BIOSCHOUT              EQU $0207 
+
 ; Start address.
 
 ; JMON Entry point
@@ -230,6 +232,8 @@ JMON ENT
                         LDA #$FF                ; Default to uppercase only mode
                         STA OUPPER
                         LDA #1
+                        STA XBIT                ; Default 65816 to 8-bit modes
+                        STA MBIT
                         LDA #$40                ; Default stack pointer for running program
                         STA SAVE_S              ; ($00 is bad choice since BRK vector is at $0100 on OSI)
                         JSR BPSETUP             ; initialization for breakpoints
@@ -1503,8 +1507,14 @@ DumpLine
 ; Registers changed: A
 GetKey
 
-                        JSR BIOSCHGET           ; Call the IO Handler to read data
-                        BCC GetKey              ; If Carry is clear, no data retrieved, retry. 
+                        
+                        ; LDA #>:ret      ; Save return address
+                        ; PHA             ;
+                        ; LDA #<:ret-1    ;
+                        ; PHA             ;
+                        ; JMP (BIOSCHGET)         ; Call the IO Handler to read data
+                        JSR V_IN               ; 
+:ret                    BCC GetKey              ; If Carry is clear, no data retrieved, retry. 
                         RTS
 
 ; Gets a hex digit (0-9,A-F). Echoes character as typed.
@@ -1845,12 +1855,26 @@ PRHEX
 PrintChar
                         PHP             ; Save status
                         PHA             ; Save A as it may be changed
-                        JSR BIOSCHOUT       ; Call OSI character out routine
-                        CMP #CRHEX         ; Is it Return?
-                        BNE :ret        ; If not, return
+                        ; STX T3          ; Store X 
+                        ; TAX             ; Save A to X
+                        ; LDA #>:ret      ; Save return address
+                        ; PHA             ;
+                        ; LDA #<:ret-1    ;
+                        ; PHA             ;
+                        ; TXA             ; Get A Back from X.
+                        ; LDX T3          ; Restore X
+                        ; JMP (BIOSCHOUT) ; Now that we now where to come back, let's Jump.
+                        JSR V_OUT       ;
+:ret                    CMP #CRHEX      ; Is it Return?
+                        BNE :ret1        ; If not, return
+                        ; LDA #>:ret1     ; Same as before
+                        ; PHA             ; Saving return address 
+                        ; LDA #<:ret1-1   ; for a safe come back
+                        ; PHA             ;        
                         LDA #LFHEX
-                        JSR BIOSCHOUT       ; Else print Linefeed too
-:ret
+                        ; JMP (BIOSCHOUT)
+                        JSR V_OUT  ;
+:ret1
                         PLA             ; Restore A
                         PLP             ; Restore status
                         RTS             ; Return.
@@ -2253,9 +2277,9 @@ ClearScreen
 ; It is unlikely but it could possibly not be present (e.g. when running in an Emulator)
 
 
-BASIC0                EQU $A2
-BASIC1                EQU $FF
-BASIC2                EQU $86
+BASIC0                EQU $A0
+BASIC1                EQU $04
+BASIC2                EQU $B9
 
 
 
@@ -2290,7 +2314,11 @@ ToUpper
                         RTS
 
 ; Strings
+V_OUT
+                        JMP (BIOSCHOUT)         ; Call the BIOS Print
 
+V_IN    
+                        JMP (BIOSCHGET)         ; Call the BIOS Get
 WelcomeMessage
 
                         ASC CR,'JMON Monitor 1.3.3 by Jeff Tranter', CR,00

@@ -42,19 +42,30 @@
 */
 
 #include "mcc_generated_files/mcc.h"
+#
 
 /*
                          Main application
  */
 static volatile uint8_t ReadBuffer=0;
+static volatile ButtonPressed=0;
 
-void UART1_Receive_Toggle_ISR(void)
+void   UART1_Receive_Toggle_ISR(void)
 {
     ReadBuffer= U1RXB; 
-    LED_Toggle();  
-    
+    LED_Toggle(); 
+      
     // or set custom function  UART1_SetRxInterruptHandler()
 }
+
+void   IOCBF1_Button_Pressed_ISR(void)
+{
+    
+    //LED_Toggle();
+    //IOCBFbits.IOCBF1 = 0;
+    //ButtonPressed=1;
+}
+
 void main(void)
 {
     // Initialize the device
@@ -67,6 +78,7 @@ void main(void)
     // Disable the Global Interrupts
     INTERRUPT_GlobalInterruptDisable();
     UART1_SetRxInterruptHandler(UART1_Receive_Toggle_ISR);
+    // IOCBF1_SetInterruptHandler(IOCBF1_Button_Pressed_ISR);
     // Enable the Global Interrupts
     INTERRUPT_GlobalInterruptEnable();
 
@@ -82,6 +94,10 @@ void main(void)
         if (ReadBuffer){
             printf("Toggled LED pressing: %c \r\n",ReadBuffer );
             ReadBuffer=0;
+        }
+        if (ButtonPressed){
+            printf("\r\n\r\nButton Pressed\r\n");
+            ButtonPressed=0;
         }
         // Add your application code
         //printf("LED ON \r\n");
