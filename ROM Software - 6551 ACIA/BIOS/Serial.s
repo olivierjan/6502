@@ -1,7 +1,7 @@
 *-------------------------------------------------------------------------------
 *--
 *--   Serial Management routines
-*--   Assume a 6850 ACIA
+*--   Assume a 6551 ACIA
 *--
 *-------------------------------------------------------------------------------
 
@@ -9,14 +9,16 @@
                 ORG   $FE00
                 TYP   $06
 
-TDREBIT         EQU   #%00000010     ; Transmit Data Register Empty bit
-RDRFBIT         EQU   #%00000001     ; Receive Data Buffer Full bit
-ACIACONFIG      EQU   #%00010100     ; 8bit + 1 stop
+TDREBIT         EQU   #%00010000     ; Transmit Data Register Empty bit
+RDRFBIT         EQU   #%00001000     ; Receive Data Buffer Full bit
+ACIAControlbits EQU   #%00011110     ; 1 stop, 8bits, 9600 bauds 
+ACIACommandbits EQU   #%00001011     ;
 CTRLCCODE       EQU   #$03           ; Control-C ASCII Code
 ACIA_Base       EQU   $A000          ; ACIA is located at $A000
-ACIA_Control    EQU   ACIA_Base + 0  ; Control and Status Register are at the
-ACIA_Status     EQU   ACIA_Base + 0  ; same base address
-ACIA_Data       EQU   ACIA_Base + 1  ; TXDATA and RXDATA also sharing address
+ACIA_Control    EQU   ACIA_Base + 3  ; Control Register Address
+ACIA_Command    EQU   ACIA_Base + 2  ; Command Register Address
+ACIA_Status     EQU   ACIA_Base + 1  ; Status Register Address
+ACIA_Data       EQU   ACIA_Base      ; TXDATA and RXDATA shares same address
 
 
 
@@ -25,11 +27,13 @@ ACIA_Data       EQU   ACIA_Base + 1  ; TXDATA and RXDATA also sharing address
 *-------------------------------------------------------------------------------
 
 BIOSCFGACIA     ENT
-                PHA                 ; Save accumulator
-                LDA   ACIACONFIG    ; Load the configuration bit
-                STA   ACIA_Control  ; Send configuration to ACIA
-                PLA                 ; Restore Accumulator
-                RTS                 ; Job done, return
+                PHA                     ; Save accumulator
+                LDA   ACIAControlbits   ; Load the configuration bit
+                STA   ACIA_Control      ; Send configuration to ACIA
+                LDA   ACIACommandbits   ;
+                STA   ACIA_Command      ;
+                PLA                     ; Restore Accumulator
+                RTS                     ; Job done, return
 
 *-------------------------------------------------------------------------------
 *-- BIOSCHOUT handle display of a character on Serial Output
